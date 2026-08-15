@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>BOSS — New Collection Catalog</title>
+
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0a0a0a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="New Collection" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --black:#0a0a0a;
+    --white:#ffffff;
+    --grey-100:#f4f4f3;
+    --grey-300:#e2e1de;
+    --grey-500:#9a978f;
+    --grey-700:#4a4844;
+    --line:#1d1d1b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--white);
+    color:var(--black);
+    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wordmark{
+    font-weight:800;
+    letter-spacing:0.08em;
+  }
+  header.top{
+    background:var(--black);
+    color:var(--white);
+    padding:38px 40px 30px;
+    border-bottom:3px solid var(--black);
+  }
+  header.top .eyebrow{
+    font-size:11px;
+    letter-spacing:0.5em;
+    text-transform:uppercase;
+    color:var(--grey-500);
+    margin-bottom:10px;
+  }
+  header.top h1{
+    margin:0;
+    font-size:30px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+  }
+  header.top p{
+    margin:10px 0 0;
+    font-size:13.5px;
+    color:#cfcfcc;
+    max-width:640px;
+    line-height:1.6;
+  }
+  main{
+    max-width:1180px;
+    margin:0 auto;
+    padding:44px 40px 100px;
+  }
+  .steps{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:22px;
+    margin-bottom:46px;
+  }
+  @media (max-width:860px){ .steps{grid-template-columns:1fr;} }
+  .step{
+    border:1px solid var(--grey-300);
+    padding:26px 26px 28px;
+    position:relative;
+  }
+  .step .idx{
+    font-size:11px;
+    letter-spacing:0.4em;
+    color:var(--grey-500);
+    display:block;
+    margin-bottom:14px;
+  }
+  .step h2{
+    margin:0 0 8px;
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    font-weight:800;
+  }
+  .step p.desc{
+    margin:0 0 18px;
+    font-size:13px;
+    color:var(--grey-700);
+    line-height:1.55;
+  }
+  .btn{
+    appearance:none;
+    border:1px solid var(--black);
+    background:var(--black);
+    color:var(--white);
+    font-family:inherit;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    font-weight:700;
+    padding:13px 22px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    transition:opacity .15s ease;
+  }
+  .btn:hover{opacity:.82;}
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn.outline{
+    background:transparent;
+    color:var(--black);
+  }
+  .meta-line{
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--grey-700);
+  }
+  .meta-line b{color:var(--black);}
+  .link-btn{
+    background:none;border:none;font-family:inherit;
+    font-size:11px;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--grey-700);text-decoration:underline;cursor:pointer;
+    padding:0;margin-left:10px;
+  }
+  .progress-wrap{
+    margin-top:16px;
+    height:3px;
+    width:100%;
+    background:var(--grey-300);
+  }
+  .progress-bar{
+    height:100%;
+    background:var(--black);
+    width:0%;
+    transition:width .2s ease;
+  }
+  .status-line{
+    font-size:12px;color:var(--grey-700);margin-top:10px;min-height:16px;
+  }
+
+  .review-head{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:26px;
+    border-bottom:2px solid var(--black);
+    padding-bottom:16px;
+    margin-bottom:34px;
+  }
+  .review-head h2{
+    margin:0;
+    font-size:20px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    font-weight:800;
+  }
+  .review-head .sub{
+    font-size:12.5px;color:var(--grey-700);margin-top:6px;
+  }
+  .field{
+    display:flex;flex-direction:column;gap:5px;
+  }
+  .field label{
+    font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey-700);
+  }
+  .field input[type=text]{
+    font-family:inherit;
+    border:1px solid var(--grey-300);
+    padding:10px 12px;
+    font-size:13px;
+    min-width:210px;
+  }
+  .field input[type=text]:focus{outline:1px solid var(--black);}
+
+  .category-block{margin-bottom:42px;}
+  .category-title{
+    display:flex;align-items:center;gap:14px;margin-bottom:16px;
+  }
+  .category-title h3{
+    margin:0;
+    font-size:13px;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    font-weight:800;
+    white-space:nowrap;
+  }
+  .category-title .count{
+    font-size:11.5px;color:var(--grey-500);
+  }
+  .category-title .rule{flex:1;height:1px;background:var(--grey-300);}
+  .category-title .sel-all{margin-left:auto;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+    gap:18px;
+  }
+  .card{
+    border:1px solid var(--grey-300);
+    background:var(--white);
+  }
+  .card.excluded{opacity:.42;}
+  .card .imgwrap{
+    position:relative;
+    background:var(--grey-100);
+    aspect-ratio:3/4;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .card .imgwrap img{
+    width:100%;height:100%;object-fit:contain;
+  }
+  .card .imgwrap input[type=checkbox]{
+    position:absolute;top:8px;left:8px;
+    width:17px;height:17px;
+    accent-color:var(--black);
+    cursor:pointer;
+  }
+  .card .info{
+    padding:10px 11px 12px;
+    border-top:1px solid var(--grey-300);
+  }
+  .card .ref{
+    font-size:10.5px;color:var(--grey-700);letter-spacing:.03em;
+    margin-bottom:8px;min-height:13px;
+  }
+  .card .cat-label{
+    width:100%;
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--black);
+    font-weight:700;
+    padding:2px 0 0;
+  }
+
+  .footer-actions{
+    position:sticky;
+    bottom:0;
+    background:var(--white);
+    border-top:2px solid var(--black);
+    padding:18px 0 6px;
+    margin-top:50px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .footer-actions .count-line{font-size:12.5px;color:var(--grey-700);}
+  .footer-actions .count-line b{color:var(--black);}
+
+  .toast{
+    position:fixed;
+    right:24px;bottom:24px;
+    background:var(--black);
+    color:var(--white);
+    padding:13px 18px;
+    font-size:12.5px;
+    letter-spacing:0.03em;
+    max-width:320px;
+    box-shadow:0 6px 24px rgba(0,0,0,.25);
+    z-index:999;
+    opacity:0;
+    transform:translateY(8px);
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.error{background:#5c1414;}
+
+  .empty-note{
+    font-size:13px;color:var(--grey-500);padding:40px 0;text-align:center;
+  }
+  input[type=file]{display:none;}
+
+  .install-banner{
+    position:fixed;left:0;right:0;bottom:0;
+    background:var(--black);color:var(--white);
+    padding:16px 20px;
+    display:flex;align-items:center;gap:14px;
+    z-index:1000;
+    transform:translateY(120%);
+    transition:transform .3s ease;
+    box-shadow:0 -6px 24px rgba(0,0,0,.3);
+    flex-wrap:wrap;
+  }
+  .install-banner.show{transform:translateY(0);}
+  .install-banner .icon{
+    width:38px;height:38px;flex-shrink:0;
+    border:1px solid #fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:12px;letter-spacing:.03em;
+  }
+  .install-banner .txt{flex:1;min-width:180px;font-size:12.5px;line-height:1.5;color:#d8d8d5;}
+  .install-banner .txt b{display:block;font-size:13.5px;color:#fff;margin-bottom:2px;letter-spacing:.02em;}
+  .install-banner .actions{display:flex;gap:8px;margin-left:auto;}
+  .install-banner button{
+    font-family:inherit;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:10px 16px;cursor:pointer;border:1px solid #fff;background:transparent;color:#fff;
+  }
+  .install-banner button.primary{background:#fff;color:#000;font-weight:700;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="eyebrow">Boss</span>
+  <h1 class="wordmark">New Collection Catalog</h1>
+  <button class="btn outline" id="installBtn" style="display:none;margin-top:16px;border-color:#fff;color:#fff;">Install App</button>
+</header>
+
+<main>
+
+  <section class="steps">
+    <div class="step">
+      <span class="idx">01</span>
+      <h2>Item references (optional)</h2>
+      <input id="excelInput" type="file" accept=".xlsx,.xls,.csv" />
+      <button class="btn outline" id="excelBtn">Import Excel Sheet</button>
+      <div class="meta-line" id="excelMeta"></div>
+    </div>
+
+    <div class="step">
+      <span class="idx">02</span>
+      <h2>Original catalog(s)</h2>
+      <input id="pdfInput" type="file" accept="application/pdf" multiple />
+      <button class="btn" id="pdfBtn">Import Catalog PDF(s)</button>
+      <div class="meta-line" id="pdfMeta"></div>
+      <div class="progress-wrap" id="progressWrap" style="display:none;">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="status-line" id="statusLine"></div>
+    </div>
+  </section>
+
+  <section id="reviewSection" style="display:none;">
+    <div class="review-head">
+      <div>
+        <h2>Review &amp; Sort</h2>
+        <div class="sub" id="selCountLine"></div>
+      </div>
+      <div class="field">
+        <label>Cover photo (optional)</label>
+        <input id="coverInput" type="file" accept="image/*" />
+        <button class="btn outline" id="coverBtn" style="padding:9px 16px;">Add Cover Photo</button>
+        <div class="meta-line" id="coverMeta"></div>
+      </div>
+      <div class="field">
+        <label for="seasonInput">Season / subtitle</label>
+        <input id="seasonInput" type="text" placeholder="Spring / Summer 26" />
+      </div>
+    </div>
+    <div id="categoryContainer"></div>
+  </section>
+
+  <div class="footer-actions" id="footerActions" style="display:none;">
+    <div class="count-line" id="footerCountLine"></div>
+    <button class="btn" id="generateBtn">Generate New Collection PDF</button>
+  </div>
+
+</main>
+
+<div class="install-banner" id="installBanner">
+  <div class="icon">B</div>
+  <div class="txt" id="installBannerText"><b>Install this app</b>Add it to your home screen for one-tap access.</div>
+  <div class="actions">
+    <button id="installDismissBtn">Not now</button>
+    <button class="primary" id="installConfirmBtn">Install</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* ---------------- state ---------------- */
+let refsSet = new Set();
+let refCategoryMap = new Map(); // reference -> category from excel
+let excelCategories = []; // ordered, as they appear in the excel sheet
+let products = []; // {id, imageDataUrl, w, h, reference, category, name, selected}
+let importedFiles = []; // names of catalog PDFs imported so far
+let coverImage = null; // {dataUrl, w, h, format}
+let toastTimer = null;
+
+const CATEGORY_ORDER = [
+  "Suits & Blazers","Shirts","T-Shirts & Polos","Knitwear",
+  "Trousers","Jeans","Jackets & Coats","Shoes","Accessories","Other"
+];
+
+const CATEGORY_RULES = [
+  [/\bt[-\s]?shirt\b|\btee\b/i, "T-Shirts & Polos"],
+  [/\bpolo\b/i, "T-Shirts & Polos"],
+  [/\bsweatshirt\b|\bhoodie\b/i, "Knitwear"],
+  [/\bshirt\b/i, "Shirts"],
+  [/\bsuit\b|\bblazer\b|\btuxedo\b/i, "Suits & Blazers"],
+  [/\bjean\b|\bdenim\b/i, "Jeans"],
+  [/\btrouser\b|\bpant\b|\bchino\b|\bshort[s]?\b/i, "Trousers"],
+  [/\bjacket\b|\bcoat\b|\bparka\b|\bpuffer\b|\banorak\b|\bgilet\b/i, "Jackets & Coats"],
+  [/\bknit\b|\bsweater\b|\bjumper\b|\bcardigan\b/i, "Knitwear"],
+  [/\bshoe\b|\bsneaker\b|\bboot\b|\bloafer\b|\bderby\b/i, "Shoes"],
+  [/\bbelt\b|\btie\b|\bwallet\b|\bbag\b|\bscarf\b|\bcap\b|\bhat\b|\bsock/i, "Accessories"],
+];
+
+function guessCategory(text){
+  for (const [re, cat] of CATEGORY_RULES){
+    if (re.test(text)) return cat;
+  }
+  return "Other";
+}
+
+// combined category order: excel-defined categories first (in the order the
+// user listed them), then the built-in fallback list, then anything else
+// found on products that isn't in either
+function getCategoryOrder(){
+  const seen = new Set();
+  const order = [];
+  excelCategories.forEach(c=>{
+    const key = c.toLowerCase();
+    if (!seen.has(key)){ seen.add(key); order.push(c); }
+  });
+  CATEGORY_ORDER.forEach(c=>{
+    const key = c.toLowerCase();
+    if (!seen.has(key)){ seen.add(key); order.push(c); }
+  });
+  products.forEach(p=>{
+    const key = (p.category||'Other').toLowerCase();
+    if (!seen.has(key)){ seen.add(key); order.push(p.category); }
+  });
+  return order;
+}
+function categoryRank(cat, order){
+  const key = (cat||'Other').toLowerCase();
+  const idx = order.findIndex(c=>c.toLowerCase()===key);
+  return idx===-1 ? 999 : idx;
+}
+
+const REF_REGEX = /\b\d{5,8}[-\/]\d{2,4}\b/;
+
+/* ---------------- toast ---------------- */
+function showToast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.className='toast', 3200);
+}
+
+/* ---------------- excel import ---------------- */
+document.getElementById('excelBtn').addEventListener('click', ()=> document.getElementById('excelInput').click());
+document.getElementById('excelInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const refs = new Set();
+    refCategoryMap = new Map();
+    excelCategories = [];
+
+    wb.SheetNames.forEach(sheetName=>{
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header:1, raw:false, defval:'' });
+      rows.forEach((row, r)=>{
+        const rawRef = String((row && row[0]) || '').trim();
+        const rawCat = String((row && row[1]) || '').trim();
+        if (!rawRef) return;
+        // skip an obvious header row, e.g. "Reference" / "Item Reference"
+        if (r===0 && /^(item\s*)?ref(erence)?(\s*no\.?)?$/i.test(rawRef)) return;
+        const m = rawRef.match(REF_REGEX);
+        const ref = m ? m[0] : rawRef;
+        refs.add(ref);
+        if (rawCat && !/^categor(y|ies)$/i.test(rawCat)){
+          refCategoryMap.set(ref, rawCat);
+          if (!excelCategories.some(c=>c.toLowerCase()===rawCat.toLowerCase())) excelCategories.push(rawCat);
+        }
+      });
+    });
+
+    refsSet = refs;
+    const catNote = excelCategories.length ? `, ${excelCategories.length} categor${excelCategories.length===1?'y':'ies'}` : '';
+    document.getElementById('excelMeta').innerHTML =
+      `${file.name} — <b>${refs.size}</b> reference${refs.size===1?'':'s'}${catNote} loaded` +
+      `<button class="link-btn" id="clearExcelBtn">clear</button>`;
+    document.getElementById('clearExcelBtn').addEventListener('click', ()=>{
+      refsSet = new Set(); refCategoryMap = new Map(); excelCategories = [];
+      document.getElementById('excelMeta').textContent = '';
+      applyRefFilterDefaults();
+      renderReview();
+    });
+    showToast(`${refs.size} item references loaded${catNote}`);
+    applyRefFilterDefaults();
+    renderReview();
+  }catch(err){
+    console.error(err);
+    showToast('Could not read that Excel file', true);
+  }
+});
+
+function applyRefFilterDefaults(){
+  if (!products.length) return;
+  products.forEach(p=>{
+    if (refsSet.size===0){ p.selected = true; return; }
+    const matchRef = p.reference
+      ? [...refsSet].find(r => p.reference === r || p.reference.startsWith(r) || r.startsWith(p.reference))
+      : undefined;
+    p.selected = !!matchRef;
+    if (matchRef && refCategoryMap.has(matchRef)){
+      p.category = refCategoryMap.get(matchRef);
+    }
+  });
+}
+
+/* ---------------- cover photo import ---------------- */
+document.getElementById('coverBtn').addEventListener('click', ()=> document.getElementById('coverInput').click());
+document.getElementById('coverInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  try{
+    const dataUrl = await fileToDataUrl(file);
+    const dims = await loadImageDims(dataUrl);
+    const format = file.type.includes('png') ? 'PNG' : 'JPEG';
+    coverImage = { dataUrl, w: dims.w, h: dims.h, format };
+    document.getElementById('coverMeta').innerHTML =
+      `${file.name} loaded <button class="link-btn" id="clearCoverBtn">clear</button>`;
+    document.getElementById('clearCoverBtn').addEventListener('click', ()=>{
+      coverImage = null;
+      document.getElementById('coverMeta').textContent = '';
+      document.getElementById('coverInput').value = '';
+    });
+    showToast('Cover photo added — it will be page one');
+  }catch(err){
+    console.error(err);
+    showToast('Could not read that image', true);
+  }
+});
+
+function fileToDataUrl(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function loadImageDims(dataUrl){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=> resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+/* ---------------- pdf import & extraction ---------------- */
+document.getElementById('pdfBtn').addEventListener('click', ()=> document.getElementById('pdfInput').click());
+document.getElementById('pdfInput').addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  await extractCatalogs(files);
+  e.target.value = ''; // allow re-selecting to add even more catalogs later
+});
+
+function matMul(m1, m2){
+  return [
+    m1[0]*m2[0]+m1[2]*m2[1],
+    m1[1]*m2[0]+m1[3]*m2[1],
+    m1[0]*m2[2]+m1[2]*m2[3],
+    m1[1]*m2[2]+m1[3]*m2[3],
+    m1[0]*m2[4]+m1[2]*m2[5]+m1[4],
+    m1[1]*m2[4]+m1[3]*m2[5]+m1[5],
+  ];
+}
+
+function dedupeBoxes(boxes){
+  const out = [];
+  for (const b of boxes){
+    const dup = out.find(o =>
+      Math.abs(o.left-b.left)<6 && Math.abs(o.top-b.top)<6 &&
+      Math.abs(o.right-b.right)<6 && Math.abs(o.bottom-b.bottom)<6
+    );
+    if (!dup) out.push(b);
+  }
+  return out;
+}
+
+async function extractPageImageBoxes(page, viewport){
+  const opList = await page.getOperatorList();
+  const OPS = pdfjsLib.OPS;
+  let ctm = [1,0,0,1,0,0];
+  const stack = [];
+  const boxes = [];
+  for (let i=0;i<opList.fnArray.length;i++){
+    const fn = opList.fnArray[i], args = opList.argsArray[i];
+    if (fn === OPS.save) stack.push(ctm.slice());
+    else if (fn === OPS.restore) ctm = stack.pop() || [1,0,0,1,0,0];
+    else if (fn === OPS.transform) ctm = matMul(ctm, args);
+    else if (fn === OPS.paintImageXObject || fn === OPS.paintImageXObjectRepeat || fn === OPS.paintJpegXObject){
+      const corners = [[0,0],[1,0],[0,1],[1,1]].map(([x,y])=>[
+        ctm[0]*x+ctm[2]*y+ctm[4], ctm[1]*x+ctm[3]*y+ctm[5]
+      ]);
+      const xs = corners.map(c=>c[0]), ys = corners.map(c=>c[1]);
+      const bb = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+      const r = viewport.convertToViewportRectangle(bb);
+      boxes.push({
+        left: Math.min(r[0], r[2]), right: Math.max(r[0], r[2]),
+        top: Math.min(r[1], r[3]), bottom: Math.max(r[1], r[3]),
+      });
+    }
+  }
+  let filtered = boxes.filter(b => (b.right-b.left) > 45 && (b.bottom-b.top) > 45);
+  filtered = dedupeBoxes(filtered);
+  const pageArea = viewport.width * viewport.height;
+  if (filtered.length > 1){
+    filtered = filtered.filter(b => (b.right-b.left)*(b.bottom-b.top) < pageArea*0.85);
+  }
+  return filtered;
+}
+
+async function extractCatalogs(files){
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const statusLine = document.getElementById('statusLine');
+  const pdfBtn = document.getElementById('pdfBtn');
+  progressWrap.style.display = 'block';
+  pdfBtn.disabled = true;
+
+  try{
+    for (let fi=0; fi<files.length; fi++){
+      const file = files[fi];
+      importedFiles.push(file.name);
+      const fileTag = importedFiles.length; // stable unique tag even across repeated imports
+
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const scale = 4.0;
+
+      for (let pageNum=1; pageNum<=pdf.numPages; pageNum++){
+        statusLine.textContent = `File ${fi+1}/${files.length} (${file.name}) — page ${pageNum} of ${pdf.numPages}…`;
+        const overall = ((fi + (pageNum-1)/pdf.numPages) / files.length) * 100;
+        progressBar.style.width = Math.round(overall) + '%';
+
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        const boxes = await extractPageImageBoxes(page, viewport);
+        if (!boxes.length) continue;
+
+        const textContent = await page.getTextContent();
+        const textItems = textContent.items
+          .map(item=>{
+            const pt = viewport.convertToViewportPoint(item.transform[4], item.transform[5]);
+            return { str: item.str, x: pt[0], y: pt[1] };
+          })
+          .filter(t=>t.str.trim());
+
+        boxes.forEach((box, idx)=>{
+          const boxH = box.bottom - box.top;
+          const boxW = box.right - box.left;
+          const captionWindow = Math.max(boxH*0.9, 60);
+          const xTol = boxW*0.7 + 40;
+          let nearby = textItems.filter(t =>
+            t.y >= box.top - 5 &&
+            t.y <= box.bottom + captionWindow &&
+            t.x >= box.left - xTol && t.x <= box.right + xTol
+          );
+          nearby.sort((a,b)=> a.y-b.y || a.x-b.x);
+          const cut = [];
+          let lastY = null;
+          for (const t of nearby){
+            if (lastY !== null && (t.y - lastY) > boxH*0.28){ break; }
+            cut.push(t);
+            lastY = t.y;
+          }
+          const infoText = cut.map(t=>t.str).join(' ');
+          const refMatch = infoText.match(REF_REGEX);
+          const reference = refMatch ? refMatch[0] : '';
+          const name = cut.length ? cut[0].str : '';
+          const category = guessCategory(infoText);
+
+          const w = Math.round(boxW), h = Math.round(boxH);
+          const cropCanvas = document.createElement('canvas');
+          cropCanvas.width = w; cropCanvas.height = h;
+          cropCanvas.getContext('2d').drawImage(canvas, box.left, box.top, w, h, 0, 0, w, h);
+
+          products.push({
+            id: `f${fileTag}_p${pageNum}_${idx}`,
+            imageDataUrl: cropCanvas.toDataURL('image/jpeg', 0.98),
+            w, h,
+            reference, name, category,
+            selected: true,
+          });
+        });
+      }
+    }
+
+    progressBar.style.width = '100%';
+    applyRefFilterDefaults();
+    updatePdfMeta();
+
+    if (!products.length){
+      showToast('No product photos were detected across the imported PDFs', true);
+      statusLine.textContent = 'No products found.';
+    } else {
+      showToast(`${products.length} products from ${importedFiles.length} file${importedFiles.length===1?'':'s'} — one combined result`);
+      statusLine.textContent = `${products.length} products extracted from ${importedFiles.length} file${importedFiles.length===1?'':'s'}.`;
+    }
+    renderReview();
+  }catch(err){
+    console.error(err);
+    showToast('Failed to read one of the catalog PDFs', true);
+    statusLine.textContent = 'Extraction failed.';
+  }finally{
+    pdfBtn.disabled = false;
+    setTimeout(()=>{ progressWrap.style.display='none'; progressBar.style.width='0%'; }, 600);
+  }
+}
+
+function updatePdfMeta(){
+  document.getElementById('pdfMeta').innerHTML =
+    `<b>${importedFiles.length}</b> file${importedFiles.length===1?'':'s'} imported — <b>${products.length}</b> products combined` +
+    `<button class="link-btn" id="clearPdfsBtn">clear all</button>`;
+  document.getElementById('clearPdfsBtn').addEventListener('click', ()=>{
+    importedFiles = [];
+    products = [];
+    document.getElementById('pdfMeta').textContent = '';
+    document.getElementById('statusLine').textContent = '';
+    renderReview();
+  });
+}
+
+/* ---------------- review UI ---------------- */
+function renderReview(){
+  const section = document.getElementById('reviewSection');
+  const footer = document.getElementById('footerActions');
+  const container = document.getElementById('categoryContainer');
+  container.innerHTML = '';
+
+  if (!products.length){
+    section.style.display = 'none';
+    footer.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  footer.style.display = 'flex';
+
+  const selCount = products.filter(p=>p.selected).length;
+  document.getElementById('selCountLine').textContent =
+    `${selCount} of ${products.length} products selected` +
+    (refsSet.size ? ` · filtered against ${refsSet.size} references` : '');
+  document.getElementById('footerCountLine').innerHTML =
+    `<b>${selCount}</b> photo${selCount===1?'':'s'} will be included in New Collection.pdf`;
+
+  const byCategory = new Map();
+  products.forEach(p=>{
+    if (!byCategory.has(p.category)) byCategory.set(p.category, []);
+    byCategory.get(p.category).push(p);
+  });
+
+  const catOrder = getCategoryOrder();
+  const orderedCats = [...byCategory.keys()].sort((a,b)=> categoryRank(a,catOrder) - categoryRank(b,catOrder));
+
+  orderedCats.forEach((cat, i)=>{
+    const items = byCategory.get(cat);
+    const block = document.createElement('div');
+    block.className = 'category-block';
+
+    const title = document.createElement('div');
+    title.className = 'category-title';
+    title.innerHTML = `
+      <h3>${String(i+1).padStart(2,'0')} — ${cat}</h3>
+      <span class="count">${items.filter(p=>p.selected).length}/${items.length}</span>
+      <div class="rule"></div>
+      <button class="link-btn sel-all" data-cat="${cat}">select all</button>
+      <button class="link-btn" data-cat="${cat}" data-none="1">select none</button>
+    `;
+    block.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    items.forEach(p=>{
+      grid.appendChild(buildCard(p));
+    });
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+
+  container.querySelectorAll('.sel-all, [data-none]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const cat = e.target.getAttribute('data-cat');
+      const toSelected = !e.target.hasAttribute('data-none');
+      products.forEach(p=>{ if (p.category===cat) p.selected = toSelected; });
+      renderReview();
+    });
+  });
+}
+
+function buildCard(p){
+  const card = document.createElement('div');
+  card.className = 'card' + (p.selected ? '' : ' excluded');
+
+  const imgwrap = document.createElement('div');
+  imgwrap.className = 'imgwrap';
+  const img = document.createElement('img');
+  img.src = p.imageDataUrl;
+  imgwrap.appendChild(img);
+
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = p.selected;
+  cb.addEventListener('change', ()=>{
+    p.selected = cb.checked;
+    card.className = 'card' + (p.selected ? '' : ' excluded');
+    renderReview();
+  });
+  imgwrap.appendChild(cb);
+  card.appendChild(imgwrap);
+
+  const info = document.createElement('div');
+  info.className = 'info';
+  const ref = document.createElement('div');
+  ref.className = 'ref';
+  ref.textContent = p.reference ? p.reference : '(no reference detected)';
+  info.appendChild(ref);
+
+  const catLabel = document.createElement('div');
+  catLabel.className = 'cat-label';
+  catLabel.textContent = p.category || 'Other';
+  info.appendChild(catLabel);
+  card.appendChild(info);
+
+  return card;
+}
+
+/* ---------------- pdf export ---------------- */
+document.getElementById('generateBtn').addEventListener('click', generateNewCollectionPdf);
+
+async function generateNewCollectionPdf(){
+  const selected = products.filter(p=>p.selected);
+  if (!selected.length){
+    showToast('Select at least one product first', true);
+    return;
+  }
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  const origLabel = btn.textContent;
+  btn.textContent = 'Generating…';
+
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+    const W = doc.internal.pageSize.getWidth();
+    const H = doc.internal.pageSize.getHeight();
+    const season = document.getElementById('seasonInput').value.trim();
+
+    doc.setFillColor(10,10,10);
+    doc.rect(0,0,W,H,'F');
+    if (coverImage){
+      const coverScale = Math.max(W/coverImage.w, H/coverImage.h);
+      const w = coverImage.w*coverScale, h = coverImage.h*coverScale;
+      const dx = (W-w)/2, dy = (H-h)/2;
+      doc.addImage(coverImage.dataUrl, coverImage.format, dx, dy, w, h);
+    } else {
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(46);
+      doc.text('BOSS', W/2, H/2 - 14, { align:'center' });
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(13);
+      doc.text('N E W   C O L L E C T I O N', W/2, H/2 + 20, { align:'center' });
+      if (season){
+        doc.setFontSize(10);
+        doc.setTextColor(190,190,186);
+        doc.text(season.toUpperCase(), W/2, H/2 + 42, { align:'center' });
+      }
+    }
+
+    const byCategory = new Map();
+    selected.forEach(p=>{
+      if (!byCategory.has(p.category)) byCategory.set(p.category, []);
+      byCategory.get(p.category).push(p);
+    });
+    const catOrder = getCategoryOrder();
+    const orderedCats = [...byCategory.keys()].sort((a,b)=> categoryRank(a,catOrder) - categoryRank(b,catOrder));
+
+    // 3 columns x 3 rows = 9 photos per page, each at its full extracted
+    // resolution; a slim header naming the category sits on top of every
+    // page that belongs to that section
+    const marginX = 26, marginBottom = 26;
+    const headerTop = 26, headerH = 30, headerGap = 14;
+    const gridTop = headerTop + headerH + headerGap;
+    const availW = W - marginX*2;
+    const availH = H - gridTop - marginBottom;
+    const cols = 3, rows = 3, gap = 10;
+    const cellW = (availW - gap*(cols-1)) / cols;
+    const cellH = (availH - gap*(rows-1)) / rows;
+
+    orderedCats.forEach((cat, ci)=>{
+      const label = `${String(ci+1).padStart(2,'0')} — ${cat.toUpperCase()}`;
+      const items = byCategory.get(cat);
+      let idx = 0;
+      while (idx < items.length){
+        doc.addPage();
+        doc.setFillColor(255,255,255);
+        doc.rect(0,0,W,H,'F');
+
+        doc.setTextColor(10,10,10);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(11);
+        doc.text(label, marginX, headerTop + 10);
+        doc.setDrawColor(10,10,10);
+        doc.setLineWidth(1);
+        doc.line(marginX, headerTop + headerH - 4, W - marginX, headerTop + headerH - 4);
+
+        for (let r=0; r<rows && idx<items.length; r++){
+          for (let c=0; c<cols && idx<items.length; c++){
+            const item = items[idx++];
+            const x = marginX + c*(cellW+gap);
+            const y = gridTop + r*(cellH+gap);
+            const scaleFit = Math.min(cellW/item.w, cellH/item.h);
+            const w = item.w*scaleFit, h = item.h*scaleFit;
+            const dx = x + (cellW-w)/2, dy = y + (cellH-h)/2;
+            doc.addImage(item.imageDataUrl, 'JPEG', dx, dy, w, h);
+          }
+        }
+      }
+    });
+
+    doc.save('New Collection.pdf');
+    showToast('New Collection.pdf generated');
+  }catch(err){
+    console.error(err);
+    showToast('Could not generate the PDF', true);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = origLabel;
+  }
+}
+/* ---------------- pwa install banner (auto, like the CRM app) ---------------- */
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function wasDismissed(){
+  try{ return localStorage.getItem('installBannerDismissed') === '1'; }catch(e){ return false; }
+}
+function markDismissed(){
+  try{ localStorage.setItem('installBannerDismissed', '1'); }catch(e){}
+}
+
+const banner = document.getElementById('installBanner');
+const bannerText = document.getElementById('installBannerText');
+const dismissBtn = document.getElementById('installDismissBtn');
+const confirmBtn = document.getElementById('installConfirmBtn');
+const installBtn = document.getElementById('installBtn');
+
+function showBanner(){
+  if (isStandalone() || wasDismissed()) return;
+  banner.classList.add('show');
+}
+function hideBanner(){
+  banner.classList.remove('show');
+}
+
+dismissBtn.addEventListener('click', ()=>{
+  hideBanner();
+  markDismissed();
+});
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  bannerText.innerHTML = '<b>Install New Collection Catalog</b>Get it as an app on this device — works offline, opens full-screen.';
+  confirmBtn.style.display = 'inline-block';
+  installBtn.style.display = 'inline-flex';
+  showBanner();
+});
+
+confirmBtn.addEventListener('click', async ()=>{
+  if (deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.style.display = 'none';
+  }
+  hideBanner();
+});
+
+installBtn.addEventListener('click', async ()=>{
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installBtn.style.display = 'none';
+});
+
+window.addEventListener('appinstalled', ()=>{
+  hideBanner();
+  installBtn.style.display = 'none';
+});
+
+// iOS Safari has no beforeinstallprompt — show manual "Add to Home Screen" instructions automatically instead
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+if (isIOS && !isStandalone()){
+  bannerText.innerHTML = '<b>Install this app</b>Tap the Share icon below, then "Add to Home Screen".';
+  confirmBtn.style.display = 'none';
+  setTimeout(showBanner, 900);
+}
+
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(err=>console.error('SW registration failed', err));
+  });
+}
+/* ---------------- pwa diagnostics (small status line, bottom-left, live) ---------------- */
+(function pwaDiag(){
+  const el = document.createElement('div');
+  el.id = 'pwaDiag';
+  el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:1001;font-size:10px;line-height:1.4;color:#7a7873;background:#fff;padding:5px 9px;border:1px solid #e2e1de;font-family:monospace;max-width:70vw;';
+  document.body.appendChild(el);
+
+  async function check(){
+    let manifestOk = false, manifestErr = '';
+    try{
+      const res = await fetch('manifest.json', { cache: 'no-store' });
+      if (res.ok){ await res.json(); manifestOk = true; }
+      else manifestErr = 'HTTP ' + res.status;
+    }catch(e){ manifestErr = e.message; }
+
+    let swState = 'none', swOk = false;
+    try{
+      if ('serviceWorker' in navigator){
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg){
+          swState = reg.active ? 'active' : (reg.installing ? 'installing' : (reg.waiting ? 'waiting' : 'registered'));
+          swOk = !!reg.active;
+        }
+      } else swState = 'unsupported';
+    }catch(e){ swState = 'error'; }
+
+    const https = location.protocol === 'https:' || location.hostname === 'localhost';
+    el.innerHTML = `pwa check — manifest: ${manifestOk ? 'ok' : ('FAIL ' + manifestErr)} · sw: ${swState} · https: ${https ? 'ok' : 'FAIL'} · installable: ${(manifestOk && swOk && https) ? 'yes' : 'not yet'}`;
+    return swOk;
+  }
+
+  check();
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.addEventListener('controllerchange', check);
+  }
+  // re-check for a few seconds in case activation is still finishing
+  let tries = 0;
+  const iv = setInterval(async ()=>{
+    tries++;
+    const ok = await check();
+    if (ok || tries > 9) clearInterval(iv);
+  }, 1000);
+})();
+</script>
+</body>
+</html>
